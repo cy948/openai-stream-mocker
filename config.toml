@@ -1,0 +1,270 @@
+[general]
+default_tokens_per_second = 10
+default_model_description = "Default configuration"
+max_stream_time_seconds = 5  # Maximum time allowed for streaming response in seconds
+enforce_time_limit = true    # Whether to enforce the maximum time limit
+truncation_message = "... [Content truncated due to time limit]"  # Added to responses when truncated
+
+# Model configurations
+[models]
+
+[models.llama-3-8b]
+tokens_per_second = 150
+description = "Llama 3 (8B parameters)"
+parameters = 8
+
+[models.llama-3-70b]
+tokens_per_second = 70
+description = "Llama 3 (70B parameters)"
+parameters = 70
+
+[models.codellama-13b]
+tokens_per_second = 100
+description = "Code Llama (13B parameters)"
+parameters = 13
+
+[models.codellama-34b]
+tokens_per_second = 90
+description = "Code Llama (34B parameters)"
+parameters = 34
+
+[models.deepseek-r1]
+tokens_per_second = 20
+description = "DeepSeek R1 (>600B parameters)"
+parameters = 10
+
+[models.gpt-3.5-turbo]
+tokens_per_second = 10
+description = "Standard GPT-3.5 Turbo model"
+parameters = 20
+
+[models.gpt-3.5-turbo-16k]
+tokens_per_second = 10
+description = "GPT-3.5 Turbo with 16k context window"
+parameters = 20
+
+[models.gpt-4]
+tokens_per_second = 5
+description = "More capable GPT-4 model"
+parameters = 170
+
+[models.gpt-4-turbo]
+tokens_per_second = 7
+description = "Enhanced GPT-4 Turbo model"
+parameters = 140
+
+[models.gpt-4-32k]
+tokens_per_second = 5
+description = "GPT-4 with 32k context window"
+parameters = 170
+
+[models.claude-2]
+tokens_per_second = 8
+description = "Claude 2 model (Anthropic)"
+parameters = 100
+
+[models.claude-instant]
+tokens_per_second = 12
+description = "Faster Claude model"
+parameters = 60
+
+# Response templates
+[responses.short]
+content = """OpenAI Stream Mocker is a tool designed to simulate the streaming response behavior of the OpenAI API. 
+It allows developers to test their applications without making actual API calls."""
+
+[responses.medium]
+content = """OpenAI Stream Mocker is a tool designed to simulate the streaming response behavior of the OpenAI API. 
+It allows developers to test their applications that consume streaming responses without making actual API calls to OpenAI.
+This can be particularly useful for:
+1. Development and testing without using OpenAI credits
+2. Testing how your application handles streaming responses
+3. Simulating different response speeds by adjusting tokens per second
+4. Reproducing specific scenarios with predefined responses
+
+The tool is configurable and can be adjusted to stream at different rates to match various network conditions or OpenAI model behaviors."""
+
+[responses.long]
+content = """# OpenAI Stream Mocker
+
+OpenAI Stream Mocker is a comprehensive tool designed to simulate the streaming response behavior of the OpenAI API. It provides developers with a reliable way to test applications that consume streaming responses without making actual API calls to OpenAI's services.
+
+## Key Features
+
+The tool offers several significant advantages for development and testing:
+
+1. **Cost-Effective Development**: Test your applications without consuming OpenAI API credits, making development more economical.
+
+2. **Realistic Streaming Simulation**: Experience authentic streaming behavior with configurable token generation speeds to match different models.
+
+3. **Performance Testing**: Evaluate how your application handles various response speeds and content lengths under different conditions.
+
+4. **Reliable Testing Environment**: Create reproducible test scenarios with predefined responses that remain consistent across test runs.
+
+5. **Model-Specific Behavior**: Simulate different language models with their characteristic generation speeds based on parameter counts.
+
+## Technical Implementation
+
+The tool implements a FastAPI server that mimics OpenAI's API endpoints, providing:
+
+- Chat completion endpoints with streaming and non-streaming responses
+- Model listing functionality that mirrors OpenAI's model discovery API
+- Usage statistics that track token consumption similar to the real API
+- Configuration options for customizing token generation speeds
+
+## Use Cases
+
+OpenAI Stream Mocker is particularly valuable in the following scenarios:
+
+### Development Workflow Integration
+
+Integrate the mock server into your development workflow to:
+- Speed up development cycles by eliminating API call latency
+- Work offline without internet connectivity to OpenAI's servers
+- Test edge cases by simulating different response patterns
+
+### Application Testing
+
+Validate your application's handling of streaming responses:
+- Test user interface updates as tokens arrive
+- Verify that your application correctly processes partial content
+- Ensure proper handling of connection interruptions
+
+### Performance Optimization
+
+Optimize your application's performance with realistic but controlled conditions:
+- Measure rendering performance with different token arrival rates
+- Test buffering strategies under varied load conditions
+- Optimize memory usage with predictable streaming patterns
+
+## Getting Started
+
+The server is designed to be simple to set up and configure. With a few basic commands, you can have a fully functional mock server running locally, providing all the capabilities you need to test your OpenAI-integrated applications thoroughly and efficiently.
+
+This powerful testing tool empowers developers to build more robust applications that work seamlessly with OpenAI's streaming APIs, all while reducing development costs and improving testing coverage."""
+
+[responses.very_long]
+content = """# Comprehensive Guide to Language Model Testing with OpenAI Stream Mocker
+
+## Introduction to API Testing Challenges
+
+Modern applications increasingly rely on sophisticated language models provided through APIs like OpenAI's GPT series. Testing these integrations presents unique challenges:
+
+1. **Cost Considerations**: API calls to commercial language models incur charges, making extensive testing expensive.
+2. **Rate Limitations**: Most API providers impose rate limits that restrict testing throughput.
+3. **Variability in Responses**: Language models produce different outputs for the same input, complicating test result validation.
+4. **Streaming Response Handling**: Applications must correctly process chunked streaming responses, which is difficult to test systematically.
+5. **Network Dependencies**: Testing requires constant internet connectivity and is affected by network latency.
+
+OpenAI Stream Mocker was developed specifically to address these challenges by providing a local, controllable testing environment for applications that integrate with language model APIs.
+
+## Technical Architecture
+
+The OpenAI Stream Mocker implements a server that faithfully replicates the behavior of OpenAI's API endpoints while offering extensive configuration options:
+
+### Core Components
+
+1. **API Endpoint Simulation**: Implements the same request/response patterns as OpenAI's official endpoints.
+2. **Token Generation Engine**: Simulates the incremental production of tokens at configurable rates.
+3. **Model Configuration System**: Allows detailed customization of response characteristics per model.
+4. **Usage Statistics**: Tracks and reports token usage in the same format as the original API.
+
+### Implementation Details
+
+The server is built using FastAPI, a modern, high-performance web framework for Python that makes it particularly suitable for API development. The streaming functionality is implemented using asynchronous generators, which efficiently produce token chunks at controlled intervals.
+
+The system uses a token estimation algorithm to approximate real-world tokenization, ensuring that response timing closely mimics actual API behavior. This approach balances simplicity with accuracy, providing a testing environment that feels authentic without the complexity of implementing a full tokenizer.
+
+## Advanced Usage Patterns
+
+### Scenario-Based Testing
+
+OpenAI Stream Mocker can be used to create repeatable test scenarios:
+
+```python
+# Example of setting up a specific test scenario
+import requests
+
+# Configure a slower model for UI testing
+requests.post("http://localhost:8000/config", json={
+    "model": "test-slow-model",
+    "tokens_per_second": 2,
+    "description": "Deliberately slow model for UI testing"
+})
+
+# Test application with the configured model
+response = requests.post("http://localhost:8000/v1/chat/completions", json={
+    "model": "test-slow-model",
+    "messages": [{"role": "user", "content": "Test prompt"}],
+    "stream": True
+})
+
+# Process streaming response
+for line in response.iter_lines():
+    if line:
+        # Process each chunk as it arrives
+        process_chunk(line)
+```
+
+### Integration with Testing Frameworks
+
+The mock server can be integrated with popular testing frameworks:
+
+```python
+# Example using pytest with OpenAI Stream Mocker
+import pytest
+import subprocess
+import time
+import requests
+
+@pytest.fixture(scope="session")
+def mock_server():
+    # Start the mock server as a subprocess
+    process = subprocess.Popen(["python", "main.py"])
+    time.sleep(1)  # Wait for server to start
+    
+    yield
+    
+    # Terminate the server after tests
+    process.terminate()
+
+def test_streaming_response_handler(mock_server):
+    # Test that our application correctly processes streaming responses
+    response = requests.post("http://localhost:8000/v1/chat/completions", 
+                           json={"model": "gpt-3.5-turbo", "messages": [...], "stream": True})
+    
+    # Test application's handling of the streaming response
+    result = my_app.process_streaming_response(response)
+    assert result.is_complete
+    assert len(result.content) > 0
+```
+
+## Performance Considerations
+
+When simulating high-volume or high-speed streaming responses, consider the following:
+
+1. **Server Resources**: The mock server's performance depends on available CPU resources. For high-speed simulations, ensure the host machine has adequate processing power.
+
+2. **Network Conditions**: Even when testing locally, network stack limitations can affect streaming performance. Use loopback interfaces for the highest throughput.
+
+3. **Client Buffering**: Testing extremely high token generation rates may reveal buffering issues in client applications that wouldn't appear with actual API calls.
+
+## Best Practices for Effective Testing
+
+1. **Match Production Settings**: Configure the mock server to match the production environment's expected token generation rates.
+
+2. **Test Edge Cases**: Use the mock server to simulate extremely slow or fast responses, which might be rare but possible in production.
+
+3. **Automated Regression Testing**: Incorporate the mock server into CI/CD pipelines to automatically test API integration with each code change.
+
+4. **Response Variety**: Use different response length presets to test how the application handles varying content sizes.
+
+5. **Error Simulation**: Test application resilience by configuring the mock server to occasionally return error responses.
+
+By following these practices, development teams can build more robust applications that gracefully handle the variabilities inherent in language model API interactions.
+
+## Conclusion
+
+OpenAI Stream Mocker represents a valuable addition to the toolkit of developers working with language model APIs. By providing a controlled, configurable environment for testing streaming API interactions, it enables more thorough testing, faster development cycles, and ultimately more reliable applications.
+
+As language models continue to become central components in modern software, tools like OpenAI Stream Mocker will be essential for maintaining high quality standards while managing the unique challenges these integrations present."""
