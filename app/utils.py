@@ -31,11 +31,12 @@ def estimate_token_count(text: str) -> int:
     # Count characters and divide by 4 (rough approximation for English text)
     return max(1, int(len(text) / 4))
 
-def calculate_usage(prompt_messages: List[Message], completion_text: str) -> Dict[str, int]:
+def calculate_usage(prompt_messages: List[Dict[str, str]], completion_text: str) -> Dict[str, int]:
     """
     Calculate token usage statistics for the request and response.
     """
-    prompt_text = " ".join([msg.content for msg in prompt_messages])
+    # Extract content from each message dictionary
+    prompt_text = " ".join([msg.get("content", "") for msg in prompt_messages])
     prompt_tokens = estimate_token_count(prompt_text)
     completion_tokens = estimate_token_count(completion_text)
     
@@ -44,3 +45,22 @@ def calculate_usage(prompt_messages: List[Message], completion_text: str) -> Dic
         "completion_tokens": completion_tokens,
         "total_tokens": prompt_tokens + completion_tokens
     }
+
+def calculate_content_length_for_duration(model_speed_tokens_per_second, duration_seconds):
+    """
+    Calculate the appropriate content length (in tokens) for a given duration.
+    
+    Args:
+        model_speed_tokens_per_second: Speed of the model in tokens per second
+        duration_seconds: Desired duration in seconds
+        
+    Returns:
+        Approximate number of tokens needed to achieve the desired duration
+    """
+    # Calculate tokens needed for the duration
+    return int(model_speed_tokens_per_second * duration_seconds)
+
+def tokens_to_chars(tokens):
+    """Convert token count to approximate character count"""
+    # Simple approximation: ~4 characters per token
+    return tokens * 4

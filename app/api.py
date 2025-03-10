@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
 from app.models import CompletionRequest, ModelConfig
-from app.services import stream_response, get_response_content
+from app.services import stream_response, get_response_content, get_response_content_for_duration
 from app.utils import calculate_usage, estimate_speed_from_parameters
 from app.config import MODEL_CONFIGS, DEFAULT_CONFIG, SAMPLE_RESPONSES, reload_config
 
@@ -89,9 +89,25 @@ async def create_chat_completion(request: CompletionRequest):
                 }
             }
         )
-        
-    # Get response content based on requested length
-    response_content = get_response_content(request.response_length)
+    
+    # Get model configuration
+    model_config = MODEL_CONFIGS.get(model, DEFAULT_CONFIG)
+    
+    # Get response content based on requested length, duration, or model speed
+    if request.duration_seconds is not None:
+        # Pass the model's tokens_per_second to ensure correct content length for duration
+        response_content = get_response_content_for_duration(
+            request.duration_seconds, 
+            model,
+            tokens_per_second=model_config.tokens_per_second
+        )
+    elif request.response_length == "auto":
+        # Use model's speed to determine appropriate response length from configuration
+        from app.config import get_auto_response_length
+        auto_length = get_auto_response_length(model_config.tokens_per_second)
+        response_content = get_response_content(auto_length)
+    else:
+        response_content = get_response_content(request.response_length)
 
     # Calculate usage statistics
     usage = calculate_usage(request.messages, response_content)
@@ -243,6 +259,12 @@ def list_response_options():
             "preview": preview
         }
     
+    # Add information about duration-based responses
+    response_options["duration"] = {
+        "description": "You can specify a duration in seconds with the 'duration_seconds' parameter",
+        "example": "Send a request with {'duration_seconds': 10} for a 10-second response"
+    }
+    
     return response_options
 
 @router.post("/config/reload", dependencies=[Depends(ignore_api_key)])
@@ -255,3 +277,96 @@ def estimate_token_count(text: str) -> int:
     """Estimate token count for a given text"""
     # Simple approximation: ~4 characters per token
     return len(text) // 4
+
+@router.post("/config/time-limit", dependencies=[Depends(ignore_api_key)])
+async def update_time_limit(request: Request):
+    """Update time limit settings"""
+    data = await request.json()
+    
+    global MAX_STREAM_TIME_SECONDS, ENFORCE_TIME_LIMIT
+    
+    if "max_seconds" in data:
+        from app.config import MAX_STREAM_TIME_SECONDS
+        old_value = MAX_STREAM_TIME_SECONDS
+        MAX_STREAM_TIME_SECONDS = int(data["max_seconds"])
+        return {
+            "message": f"Time limit updated from {old_value} to {MAX_STREAM_TIME_SECONDS} seconds",
+            "enforce": ENFORCE_TIME_LIMIT
+        }
+        
+    if "enforce" in data:
+        from app.config import ENFORCE_TIME_LIMIT
+        old_value = ENFORCE_TIME_LIMIT
+        ENFORCE_TIME_LIMIT = bool(data["enforce"])
+        return {
+            "message": f"Time limit enforcement changed from {old_value} to {ENFORCE_TIME_LIMIT}",
+            "limit_seconds": MAX_STREAM_TIME_SECONDS
+        }
+    
+    # Return current settings if no changes
+    return {
+        "max_seconds": MAX_STREAM_TIME_SECONDS,
+        "enforce": ENFORCE_TIME_LIMIT
+    }
+
+@router.post("/config/time-control", dependencies=[Depends(ignore_api_key)])
+async def set_time_control(request: Request):
+    """Fine-grained control of time limit settings"""
+    data = await request.json()
+    
+    # For global settings
+    from app.config import MAX_STREAM_TIME_SECONDS, ENFORCE_TIME_LIMIT
+    updates = {}
+    
+    if "enforce" in data:
+        old_value = ENFORCE_TIME_LIMIT
+        ENFORCE_TIME_LIMIT = bool(data["enforce"])
+        updates["enforce"] = f"Changed from {old_value} to {ENFORCE_TIME_LIMIT}"
+        
+    if "global_seconds" in data:
+        old_value = MAX_STREAM_TIME_SECONDS
+        MAX_STREAM_TIME_SECONDS = int(data["global_seconds"])
+        updates["global_seconds"] = f"Changed from {old_value} to {MAX_STREAM_TIME_SECONDS}"
+    
+    # For model-specific settings
+    if "model_settings" in data and isinstance(data["model_settings"], dict):
+        model_settings = data["model_settings"]
+        for model_id, seconds in model_settings.items():
+            if model_id in MODEL_CONFIGS:
+                old_value = getattr(MODEL_CONFIGS[model_id], "max_stream_time_seconds", None)
+                MODEL_CONFIGS[model_id].max_stream_time_seconds = int(seconds)
+                updates[f"model_{model_id}"] = f"Changed from {old_value} to {seconds} seconds"
+    
+    if not updates:
+        # Return current settings
+        model_settings = {
+            model: getattr(config, "max_stream_time_seconds", MAX_STREAM_TIME_SECONDS) 
+            for model, config in MODEL_CONFIGS.items()
+        }
+        return {
+            "enforce_time_limit": ENFORCE_TIME_LIMIT,
+            "global_seconds": MAX_STREAM_TIME_SECONDS,
+            "model_settings": model_settings
+        }
+    
+    return {
+        "message": "Time control settings updated",
+        "updates": updates,
+        "current": {
+            "enforce": ENFORCE_TIME_LIMIT,
+            "global_seconds": MAX_STREAM_TIME_SECONDS
+        }
+    }
+
+@router.get("/debug/settings", dependencies=[Depends(ignore_api_key)])
+def get_debug_settings():
+    """Get current debug settings including time limits"""
+    from app.config import MAX_STREAM_TIME_SECONDS, ENFORCE_TIME_LIMIT, MODEL_CONFIGS, DEFAULT_CONFIG
+    
+    return {
+        "time_limit_seconds": MAX_STREAM_TIME_SECONDS,
+        "enforce_time_limit": ENFORCE_TIME_LIMIT,
+        "default_tokens_per_second": DEFAULT_CONFIG.tokens_per_second,
+        "model_count": len(MODEL_CONFIGS),
+        "models": {model: config.tokens_per_second for model, config in MODEL_CONFIGS.items()}
+    }

@@ -1,9 +1,29 @@
 [general]
 default_tokens_per_second = 10
 default_model_description = "Default configuration"
-max_stream_time_seconds = 5  # Maximum time allowed for streaming response in seconds
-enforce_time_limit = true    # Whether to enforce the maximum time limit
-truncation_message = "... [Content truncated due to time limit]"  # Added to responses when truncated
+max_stream_time_seconds = 120
+enforce_time_limit = false
+truncation_message = "\n\nI've reached the response time limit, but I hope this information helps. Let me know if you need more details."
+default_response_mode = "auto"
+
+# Define auto response length thresholds
+[auto_response_length]
+
+[auto_response_length.slow]
+max_tokens_per_second = 8.0
+response_length = "short"
+
+[auto_response_length.medium]
+max_tokens_per_second = 20.0
+response_length = "medium"
+
+[auto_response_length.long]
+max_tokens_per_second = 30.0
+response_length = "long"
+
+[auto_response_length.fast]
+max_tokens_per_second = 80.0
+response_length = "very_long"
 
 # Model configurations
 [models]
@@ -25,8 +45,9 @@ parameters = 13
 
 [models.codellama-34b]
 tokens_per_second = 90
-description = "Code Llama (34B parameters)"
+description = "Code Llama (34B parameters) - Full output mode"
 parameters = 34
+max_stream_time_seconds = 180  # Extended time limit for this specific model
 
 [models.deepseek-r1]
 tokens_per_second = 20
@@ -34,9 +55,8 @@ description = "DeepSeek R1 (>600B parameters)"
 parameters = 10
 
 [models.gpt-3.5-turbo]
-tokens_per_second = 10
-description = "Standard GPT-3.5 Turbo model"
-parameters = 20
+tokens_per_second = 15
+description = "GPT-3.5 Turbo"
 
 [models.gpt-3.5-turbo-16k]
 tokens_per_second = 10
@@ -44,9 +64,8 @@ description = "GPT-3.5 Turbo with 16k context window"
 parameters = 20
 
 [models.gpt-4]
-tokens_per_second = 5
-description = "More capable GPT-4 model"
-parameters = 170
+tokens_per_second = 7.5
+description = "GPT-4"
 
 [models.gpt-4-turbo]
 tokens_per_second = 7
@@ -59,93 +78,131 @@ description = "GPT-4 with 32k context window"
 parameters = 170
 
 [models.claude-2]
-tokens_per_second = 8
-description = "Claude 2 model (Anthropic)"
-parameters = 100
+tokens_per_second = 20
+description = "Anthropic Claude 2"
 
 [models.claude-instant]
 tokens_per_second = 12
 description = "Faster Claude model"
 parameters = 60
 
+# Add your 34b model
+[models.your-34b-model]
+tokens_per_second = 90
+description = "High-speed 34B model"
+parameters = 34
+
 # Response templates
 [responses.short]
-content = """OpenAI Stream Mocker is a tool designed to simulate the streaming response behavior of the OpenAI API. 
-It allows developers to test their applications without making actual API calls."""
+content = """
+This is a short response from the OpenAI Stream Mocker.
+Update the default time limit values to give more generous limits for high-speed models:
+
+$$
+L_{\\delta}(y, \\hat{y}) = \\begin{cases}
+\\frac{1}{2}(y - \\hat{y})^2 & \\text{for } |y - \\hat{y}| \\leq \\delta, \\\\
+\\delta (|y - \\hat{y}| - \\frac{1}{2} \\delta), & \\text{otherwise.}
+\\end{cases}
+$$
+
+Uses a simple timer approach by checking the elapsed time on each iteration
+"""
 
 [responses.medium]
-content = """OpenAI Stream Mocker is a tool designed to simulate the streaming response behavior of the OpenAI API. 
-It allows developers to test their applications that consume streaming responses without making actual API calls to OpenAI.
-This can be particularly useful for:
-1. Development and testing without using OpenAI credits
-2. Testing how your application handles streaming responses
-3. Simulating different response speeds by adjusting tokens per second
-4. Reproducing specific scenarios with predefined responses
+content = """This is a medium-length response from the OpenAI Stream Mocker.
 
-The tool is configurable and can be adjusted to stream at different rates to match various network conditions or OpenAI model behaviors."""
+Uses a simple timer approach by checking the elapsed time on each iteration
+When the time limit is exceeded, it completes the current paragraph and adds the truncation message
+Removes all the complex time calculation logic that was trying to predict completion time
+Adjusts the default time limit to 120 seconds, with a 180-second override for the codellama-34b model
+Adds a new endpoint for fine-grained control of time limits per model
+
+$$
+L_{\\delta}(y, \\hat{y}) = \\begin{cases}
+\\frac{1}{2}(y - \\hat{y})^2 & \\text{for } |y - \\hat{y}| \\leq \\delta, \\\\
+\\delta (|y - \\hat{y}| - \\frac{1}{2} \\delta), & \\text{otherwise.}
+\\end{cases}
+$$
+It contains several paragraphs with in-depth explanations, examples, and reasoning. This is designed to simulate lengthier AI assistant responses that would be generated for complex questions.
+
+The response includes some technical details and explanations to mimic AI assistant behavior."""
 
 [responses.long]
-content = """# OpenAI Stream Mocker
+content = """
+This is a comprehensive response from the OpenAI Stream Mocker that covers multiple aspects of the topic in detail.
+$$
+L_{\\delta}(y, \\hat{y}) = \\begin{cases}
+\\frac{1}{2}(y - \\hat{y})^2 & \\text{for } |y - \\hat{y}| \\leq \\delta, \\\\
+\\delta (|y - \\hat{y}| - \\frac{1}{2} \\delta), & \\text{otherwise.}
+\\end{cases}
+$$
+It contains several paragraphs with in-depth explanations, examples, and reasoning. This is designed to simulate lengthier AI assistant responses that would be generated for complex questions.
+The structure includes introduction, main points, supporting details, and conclusions - similar to well-formatted AI responses.
+$$
+L_{\\delta}(y, \\hat{y}) = \\begin{cases}
+\\frac{1}{2}(y - \\hat{y})^2 & \\text{for } |y - \\hat{y}| \\leq \\delta, \\\\
+\\delta (|y - \\hat{y}| - \\frac{1}{2} \\delta), & \\text{otherwise.}
+\\end{cases}
+$$
 
-OpenAI Stream Mocker is a comprehensive tool designed to simulate the streaming response behavior of the OpenAI API. It provides developers with a reliable way to test applications that consume streaming responses without making actual API calls to OpenAI's services.
+Simplify Time Limit Implementation
+Let's change the time limit implementation to use a simple timer approach instead of calculating text length. This will make the behavior more predictable and ensure we don't truncate content prematurely.
 
-## Key Features
+Step-by-Step Solution
+Modify the stream_response function in services.py to use a timer-based approach
+Remove complex time calculation logic
+Add a simple timeout mechanism
 
-The tool offers several significant advantages for development and testing:
+Technical terminology and varied sentence structures are included to make the response appear more natural and sophisticated.
+Modern applications increasingly rely on sophisticated language models provided through APIs like OpenAI's GPT series. Testing these integrations presents unique challenges:
 
-1. **Cost-Effective Development**: Test your applications without consuming OpenAI API credits, making development more economical.
+1. **Cost Considerations**: API calls to commercial language models incur charges, making extensive testing expensive.
+2. **Rate Limitations**: Most API providers impose rate limits that restrict testing throughput.
+3. **Variability in Responses**: Language models produce different outputs for the same input, complicating test result validation.
+4. **Streaming Response Handling**: Applications must correctly process chunked streaming responses, which is difficult to test systematically.
+5. **Network Dependencies**: Testing requires constant internet connectivity and is affected by network latency.
 
-2. **Realistic Streaming Simulation**: Experience authentic streaming behavior with configurable token generation speeds to match different models.
+### Implementation Details
 
-3. **Performance Testing**: Evaluate how your application handles various response speeds and content lengths under different conditions.
+The server is built using FastAPI, a modern, high-performance web framework for Python that makes it particularly suitable for API development. The streaming functionality is implemented using asynchronous generators, which efficiently produce token chunks at controlled intervals.
 
-4. **Reliable Testing Environment**: Create reproducible test scenarios with predefined responses that remain consistent across test runs.
+The system uses a token estimation algorithm to approximate real-world tokenization, ensuring that response timing closely mimics actual API behavior. This approach balances simplicity with accuracy, providing a testing environment that feels authentic without the complexity of implementing a full tokenizer.
 
-5. **Model-Specific Behavior**: Simulate different language models with their characteristic generation speeds based on parameter counts.
+## Advanced Usage Patterns
 
-## Technical Implementation
+### Scenario-Based Testing
 
-The tool implements a FastAPI server that mimics OpenAI's API endpoints, providing:
+OpenAI Stream Mocker can be used to create repeatable test scenarios:
 
-- Chat completion endpoints with streaming and non-streaming responses
-- Model listing functionality that mirrors OpenAI's model discovery API
-- Usage statistics that track token consumption similar to the real API
-- Configuration options for customizing token generation speeds
+```python
+# Example of setting up a specific test scenario
+import requests
+# Configure a slower model for UI testing
+requests.post("http://localhost:8000/config", json={
+    "model": "test-slow-model",
+    "tokens_per_second": 2,
+    "description": "Deliberately slow model for UI testing"
+})
+# Test application with the configured model
+response = requests.post("http://localhost:8000/v1/chat/completions", json={
+    "model": "test-slow-model",
+    "messages": [{"role": "user", "content": "Test prompt"}],
+    "stream": True
+})
+# Process streaming response
+for line in response.iter_lines():
+    if line:
+        # Process each chunk as it arrives
+        process_chunk(line)
+```
 
-## Use Cases
 
-OpenAI Stream Mocker is particularly valuable in the following scenarios:
-
-### Development Workflow Integration
-
-Integrate the mock server into your development workflow to:
-- Speed up development cycles by eliminating API call latency
-- Work offline without internet connectivity to OpenAI's servers
-- Test edge cases by simulating different response patterns
-
-### Application Testing
-
-Validate your application's handling of streaming responses:
-- Test user interface updates as tokens arrive
-- Verify that your application correctly processes partial content
-- Ensure proper handling of connection interruptions
-
-### Performance Optimization
-
-Optimize your application's performance with realistic but controlled conditions:
-- Measure rendering performance with different token arrival rates
-- Test buffering strategies under varied load conditions
-- Optimize memory usage with predictable streaming patterns
-
-## Getting Started
-
-The server is designed to be simple to set up and configure. With a few basic commands, you can have a fully functional mock server running locally, providing all the capabilities you need to test your OpenAI-integrated applications thoroughly and efficiently.
-
-This powerful testing tool empowers developers to build more robust applications that work seamlessly with OpenAI's streaming APIs, all while reducing development costs and improving testing coverage."""
+"""
 
 [responses.very_long]
-content = """# Comprehensive Guide to Language Model Testing with OpenAI Stream Mocker
-
+content = """
+[responses.very_long]
+# Comprehensive Guide to Language Model Testing with OpenAI Stream Mocker
 ## Introduction to API Testing Challenges
 
 Modern applications increasingly rely on sophisticated language models provided through APIs like OpenAI's GPT series. Testing these integrations presents unique challenges:
@@ -157,6 +214,12 @@ Modern applications increasingly rely on sophisticated language models provided 
 5. **Network Dependencies**: Testing requires constant internet connectivity and is affected by network latency.
 
 OpenAI Stream Mocker was developed specifically to address these challenges by providing a local, controllable testing environment for applications that integrate with language model APIs.
+$$
+L_{\\delta}(y, \\hat{y}) = \\begin{cases}
+\\frac{1}{2}(y - \\hat{y})^2 & \\text{for } |y - \\hat{y}| \\leq \\delta, \\\\
+\\delta (|y - \\hat{y}| - \\frac{1}{2} \\delta), & \\text{otherwise.}
+\\end{cases}
+$$
 
 ## Technical Architecture
 
@@ -205,6 +268,14 @@ for line in response.iter_lines():
         # Process each chunk as it arrives
         process_chunk(line)
 ```
+
+$$
+L_{\\delta}(y, \\hat{y}) = \\begin{cases}
+\\frac{1}{2}(y - \\hat{y})^2 & \\text{for } |y - \\hat{y}| \\leq \\delta, \\\\
+\\delta (|y - \\hat{y}| - \\frac{1}{2} \\delta), & \\text{otherwise.}
+\\end{cases}
+$$
+
 
 ### Integration with Testing Frameworks
 

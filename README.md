@@ -42,6 +42,24 @@ The server is configured using `config.toml` file which includes:
 - Response templates for various lengths
 - Default settings
 - Time limit settings
+- Auto response length settings
+
+### Auto Response Length Configuration
+
+The system determines which response length to use based on the model's speed. This mapping is configurable in the `config.toml` file:
+
+```toml
+# Define auto response length thresholds
+[auto_response_length]
+# For models with ≤3 tokens per second (slow models)
+slow = { max_tokens_per_second = 3.0, response_length = "short" }
+# For models with 3-7 tokens per second (medium speed models)
+medium = { max_tokens_per_second = 7.0, response_length = "medium" }
+# For models with >7 tokens per second (fast models)
+fast = { max_tokens_per_second = 999999, response_length = "long" }
+```
+
+You can adjust these thresholds and associated response lengths to better match your specific testing needs.
 
 #### Time Limit Configuration
 
@@ -261,4 +279,44 @@ This information is included in non-streaming responses and in the final chunk o
 - TOML configuration for easy customization
 - Multiple response lengths for comprehensive testing
 - Time limit enforcement for streaming responses
+
+## Response Length Modes
+
+The system now supports the following response length modes:
+
+- `auto`: (Default) Automatically selects response length based on model speed and configuration
+  - Configured in the `[auto_response_length]` section of `config.toml`
+  - Default configuration:
+    - Slow models (≤3 tokens/sec): short responses
+    - Medium speed models (3-7 tokens/sec): medium responses
+    - Fast models (>7 tokens/sec): long responses
+- `short`: A brief response
+- `medium`: A moderate-length response
+- `long`: A detailed response
+- `very_long`: An extensive response
+- `random`: Randomly chooses from the available length options
+
+Example request using the `auto` response length:
+```json
+{
+  "model": "gpt-4",
+  "messages": [{"role": "user", "content": "Hello"}],
+  "stream": true,
+  "response_length": "auto"
+}
+```
+
+## Duration-Based Responses
+
+You can also specify an exact duration for responses:
+```json
+{
+  "model": "gpt-4",
+  "messages": [{"role": "user", "content": "Hello"}],
+  "stream": true,
+  "duration_seconds": 10
+}
+```
+
+This will generate a response of appropriate length to take approximately 10 seconds to stream.
 
