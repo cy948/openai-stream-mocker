@@ -4,9 +4,16 @@ A simple server that mocks OpenAI's streaming API, allowing you to test applicat
 
 ## Introduction
 
-Try this if you are developing a web application which:
-- Need to handle a AI stream and make the annimation smoothly
-- Need to test your speed statistic functionality like `token / s`, `usage`.
+This tool simulates OpenAI's streaming API responses, designed specifically for frontend developers who need to test and optimize UI/UX for AI chat interfaces. It provides a controlled environment to:
+
+- Test the smoothness and responsiveness of typing animations and text rendering
+- Benchmark your application's performance with different token streaming speeds
+- Debug edge cases in stream handling without incurring API costs
+- Validate token usage statistics and speed calculations in your frontend
+- Simulate different model response behaviors from fast to slow generation speeds
+- Ensure your application gracefully handles variable network conditions
+
+Perfect for developers building chat interfaces, code completion tools, or any application that consumes streaming AI responses.
 
 ## Installation
 
